@@ -7,7 +7,7 @@ WIND_POWER = 15.0
 TURBULENCE_POWER = 0.0
 GRAVITY = -10.0
 RENDER_MODE = 'human'
-#RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
+RENDER_MODE = None #seleccione esta opção para não visualizar o ambiente (testes mais rápidos)
 EPISODES = 1000
 
 env = gym.make("LunarLander-v3", render_mode =RENDER_MODE, 
@@ -55,15 +55,56 @@ def simulate(steps=1000,seed=None, policy = None):
 
 #Perceptions
 ##TODO: Defina as suas perceções aqui
-
+def perception(observation):
+    x = observation[0]
+    y = observation[1]
+    velx = observation[2]
+    vely = observation[3]
+    ori = observation[4]
+    angvel = observation[5]
+    ltouch = observation[6]
+    rtouch = observation[7]
+    return actions(x,y,velx,vely,ori,angvel,ltouch,rtouch)
+    
 #Actions
 ##TODO: Defina as suas ações aqui
+def actions(x,y,velx,vely,ori,angvel,ltouch,rtouch):
+    action = np.array([0., 0.])
+    speedx = 0.2
+    
+    #orientar para o angulo certo
+    if ori < -0.05:
+        action[1] -= 0.55
+    if ori > 0.05:
+        action[1] += 0.55
+    #Manter-se no ar e não cair
+
+    if vely < 0:
+        action[0] += 0.5
+    if vely < 0 and x < 0.1 and x > -0.1:
+        action[0] -= 0.45
+    if y < 0.1 and ltouch and rtouch and x < 0.1 and x > -0.1:
+        action[0] = 0
+        action[1] = 0
+    #Avançar para a direita
+    if x < 0 and ori > -0.36 and angvel > -0.16 and velx < 0.19:
+        action[1] += 0.051
+
+    #Avançar para a esquerda
+    if x > 0 and ori < 0.36 and angvel < 0.16 and velx > -0.19:
+        action[1] -= 0.051
+
+    return action
 
 
 def reactive_agent(observation):
     ##TODO: Implemente aqui o seu agente reativo
     ##Substitua a linha abaixo pela sua implementação
-    action = env.action_space.sample()
+    
+    # print('observação:',observation)
+    action = perception(observation)
+    # print('\n\nAction:',action)
+    
     return action 
     
     
